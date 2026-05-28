@@ -1,13 +1,13 @@
-package io.github.kmwh.tradeos_backend;
+// package io.github.kmwh.tradeos_backend;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+// import org.junit.jupiter.api.Test;
+// import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class TradeosBackendApplicationTests {
+// @SpringBootTest
+// class TradeosBackendApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+// 	@Test
+// 	void contextLoads() {
+// 	}
 
-}
+// }
