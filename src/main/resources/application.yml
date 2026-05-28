@@ -18,8 +18,8 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGL_CLIENT_ID}
-            client-secret: ${GOOGL_CLIENT_SECRET}
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             scope: profile, email
 
 springdoc:
@@ -27,3 +27,8 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /api-docs
+
+gemini:
+  api:
+    url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+    key: ${GOOGLE_API_KEY}
