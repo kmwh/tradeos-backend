@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/tradeos?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&createDatabaseIfNotExist=true
-    username: root
-    password:
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -18,8 +18,8 @@ spring:
       client:
         registration:
           google:
-            client-id: client-id 입력
-            client-secret: client-secret 입력
+            client-id: ${GOOGL_CLIENT_ID}
+            client-secret: ${GOOGL_CLIENT_SECRET}
             scope: profile, email
 
 springdoc:
