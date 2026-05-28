@@ -1,6 +1,7 @@
 package io.github.kmwh.tradeos_backend.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
@@ -11,6 +12,10 @@ import java.time.LocalDateTime;
 @Table(name = "hmm_history")
 public class HmmHistory {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
     private LocalDateTime timestamp;
 
     @Column(nullable = false, length = 20)
@@ -18,4 +23,11 @@ public class HmmHistory {
 
     @Column(nullable = false)
     private Integer trendScore;
+
+    @Builder
+    public HmmHistory(LocalDateTime timestamp, String symbol, Integer trendScore) {
+        this.timestamp = timestamp;
+        this.symbol = symbol;
+        this.trendScore = trendScore;
+    }
 }
