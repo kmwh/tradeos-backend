@@ -8,8 +8,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 public class TradeosBackendApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(TradeosBackendApplication.class, args);
-	}
+  public static void main(String[] args) {
+    SpringApplication.run(TradeosBackendApplication.class, args);
+  }
 
 }
