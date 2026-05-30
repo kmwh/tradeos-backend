@@ -29,7 +29,7 @@ public class DashboardService {
 
     int totalTrades = journals.size();
     if (totalTrades == 0) {
-      return new DashboardMetricsResponseDto(0, "데이터 부족", "데이터 부족", "데이터 부족", 0.0, 0.0, 0.0);
+      return new DashboardMetricsResponseDto(0, "데이터 부족", "데이터 부족", "데이터 부족", 0.0, null, null);
     }
 
     LocalDateTime earliestTrade = journals.get(journals.size() - 1).getEntryTime();
@@ -51,7 +51,7 @@ public class DashboardService {
 
     List<Journal> trendJournals = journals.stream()
         .filter(j -> j.getMarketHmmScore() != null && j.getMarketHmmScore() > 60).toList();
-    double trendWinRate = 0.0;
+    Double trendWinRate = null;
     if (!trendJournals.isEmpty()) {
       long trendWins = trendJournals.stream().filter(j -> j.getRealizedPnl() > 0).count();
       trendWinRate = Math.round(((double) trendWins / trendJournals.size()) * 1000) / 10.0;
@@ -59,7 +59,7 @@ public class DashboardService {
 
     List<Journal> nonTrendJournals = journals.stream()
         .filter(j -> j.getMarketHmmScore() != null && j.getMarketHmmScore() <= 60).toList();
-    double nonTrendWinRate = 0.0;
+    Double nonTrendWinRate = null;
     if (!nonTrendJournals.isEmpty()) {
       long nonTrendWins = nonTrendJournals.stream().filter(j -> j.getRealizedPnl() > 0).count();
       nonTrendWinRate = Math.round(((double) nonTrendWins / nonTrendJournals.size()) * 1000) / 10.0;
