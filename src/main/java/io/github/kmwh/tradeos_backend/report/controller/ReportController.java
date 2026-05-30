@@ -16,19 +16,19 @@ public class ReportController {
 
   private final ReportService tendencyReportService;
 
-  @PostMapping("/tendency")
+  @PostMapping
   public ResponseEntity<ReportResponseDto> generateReport(@AuthenticationPrincipal Long userId,
       @RequestParam(value = "period", required = false) String period) {
     return ResponseEntity.ok(tendencyReportService.generatePerformanceReport(userId));
   }
 
-  @GetMapping("/tendency/latest")
+  @GetMapping("/latest")
   public ResponseEntity<ReportResponseDto> getLatestReport(@AuthenticationPrincipal Long userId,
       @RequestParam(value = "period", required = false) String period) {
     return ResponseEntity.ok(tendencyReportService.getLatestReport(userId));
   }
 
-  @GetMapping("/tendency/history")
+  @GetMapping("/history")
   public ResponseEntity<List<ReportResponseDto>> getReportHistory(
       @AuthenticationPrincipal Long userId) {
     return ResponseEntity.ok(tendencyReportService.getReportHistory(userId));
