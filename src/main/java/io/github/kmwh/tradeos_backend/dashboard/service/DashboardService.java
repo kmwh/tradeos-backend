@@ -33,21 +33,20 @@ public class DashboardService {
 
     int totalTrades = journals.size();
     if (totalTrades == 0) {
-      return new DashboardMetricsResponseDto(0, "분석 불가", "분석 불가", "분석 불가", 0.0, 0.0, 0.0);
+      return new DashboardMetricsResponseDto(0, "데이터 부족", "데이터 부족", "데이터 부족", 0.0, 0.0, 0.0);
     }
 
     long daysActive = Duration.between(user.getCreatedAt(), LocalDateTime.now()).toDays();
     daysActive = daysActive == 0 ? 1 : daysActive;
     double freq = (double) totalTrades / daysActive;
-    String tradeFrequency = freq >= 3.0 ? "높음 (HIGH)" : freq >= 1.0 ? "중간 (MEDIUM)" : "낮음 (LOW)";
+    String tradeFrequency = freq >= 3.0 ? "HIGH" : freq >= 1.0 ? "MEDIUM" : "LOW";
 
     double avgLeverage = journals.stream().mapToDouble(Journal::getLeverage).average().orElse(1.0);
-    String riskTolerance =
-        avgLeverage >= 20.0 ? "높음 (HIGH)" : avgLeverage >= 5.0 ? "중간 (MEDIUM)" : "낮음 (LOW)";
+    String riskTolerance = avgLeverage >= 20.0 ? "HIGH" : avgLeverage >= 5.0 ? "MEDIUM" : "LOW";
 
     double avgDuration =
         journals.stream().mapToDouble(Journal::getDurationSeconds).average().orElse(0.0);
-    String tradeDuration = avgDuration >= 86400 ? "장기 (LONG-TERM)" : "단기 (SHORT-TERM)";
+    String tradeDuration = avgDuration >= 86400 ? "LONG-TERM" : "SHORT-TERM";
 
     long winCount = journals.stream().filter(j -> j.getRealizedPnl() > 0).count();
     double totalWinRate = Math.round(((double) winCount / totalTrades) * 1000) / 10.0;
