@@ -17,14 +17,12 @@ public class ReportController {
   private final ReportService tendencyReportService;
 
   @PostMapping
-  public ResponseEntity<ReportResponseDto> generateReport(@AuthenticationPrincipal Long userId,
-      @RequestParam(value = "period", required = false) String period) {
+  public ResponseEntity<ReportResponseDto> generateReport(@AuthenticationPrincipal Long userId) {
     return ResponseEntity.ok(tendencyReportService.generatePerformanceReport(userId));
   }
 
   @GetMapping("/latest")
-  public ResponseEntity<ReportResponseDto> getLatestReport(@AuthenticationPrincipal Long userId,
-      @RequestParam(value = "period", required = false) String period) {
+  public ResponseEntity<ReportResponseDto> getLatestReport(@AuthenticationPrincipal Long userId) {
     return ResponseEntity.ok(tendencyReportService.getLatestReport(userId));
   }
 
