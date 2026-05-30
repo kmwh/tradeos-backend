@@ -1,7 +1,6 @@
 package io.github.kmwh.tradeos_backend.journal.controller;
 
 import io.github.kmwh.tradeos_backend.global.dto.MessageResponseDto;
-import io.github.kmwh.tradeos_backend.journal.dto.AiFeedbackResponseDto;
 import io.github.kmwh.tradeos_backend.journal.dto.JournalDetailResponseDto;
 import io.github.kmwh.tradeos_backend.journal.dto.JournalIdResponseDto;
 import io.github.kmwh.tradeos_backend.journal.dto.JournalListResponseDto;
@@ -51,18 +50,5 @@ public class JournalController {
       @PathVariable("journalId") Long journalId) {
     journalService.deleteJournal(userId, journalId);
     return ResponseEntity.ok(new MessageResponseDto("매매 일지가 삭제되었습니다."));
-  }
-
-  @PostMapping("/{journalId}/feedback")
-  public ResponseEntity<AiFeedbackResponseDto> requestAiFeedback(
-      @AuthenticationPrincipal Long userId, @PathVariable("journalId") Long journalId) {
-    return ResponseEntity.ok(journalService.analyzeJournal(userId, journalId));
-  }
-
-  @DeleteMapping("/{journalId}/feedback")
-  public ResponseEntity<MessageResponseDto> deleteAiFeedback(@AuthenticationPrincipal Long userId,
-      @PathVariable("journalId") Long journalId) {
-    journalService.deleteAiFeedback(userId, journalId);
-    return ResponseEntity.ok(new MessageResponseDto("기존 AI 피드백이 삭제되어 일지 수정이 가능합니다."));
   }
 }
