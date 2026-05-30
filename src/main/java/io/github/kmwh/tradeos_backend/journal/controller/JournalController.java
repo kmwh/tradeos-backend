@@ -35,33 +35,33 @@ public class JournalController {
 
   @GetMapping("/{journalId}")
   public ResponseEntity<JournalDetailResponseDto> getJournalDetail(
-      @AuthenticationPrincipal Long userId, @PathVariable Long journalId) {
+      @AuthenticationPrincipal Long userId, @PathVariable("journalId") Long journalId) {
     return ResponseEntity.ok(journalService.getJournalDetail(userId, journalId));
   }
 
   @PutMapping("/{journalId}")
   public ResponseEntity<MessageResponseDto> updateJournal(@AuthenticationPrincipal Long userId,
-      @PathVariable Long journalId, @RequestBody JournalRequestDto requestDto) {
+      @PathVariable("journalId") Long journalId, @RequestBody JournalRequestDto requestDto) {
     journalService.updateJournal(userId, journalId, requestDto);
     return ResponseEntity.ok(new MessageResponseDto("매매 일지가 성공적으로 수정되었습니다."));
   }
 
   @DeleteMapping("/{journalId}")
   public ResponseEntity<MessageResponseDto> deleteJournal(@AuthenticationPrincipal Long userId,
-      @PathVariable Long journalId) {
+      @PathVariable("journalId") Long journalId) {
     journalService.deleteJournal(userId, journalId);
     return ResponseEntity.ok(new MessageResponseDto("매매 일지가 삭제되었습니다."));
   }
 
   @PostMapping("/{journalId}/feedback")
   public ResponseEntity<AiFeedbackResponseDto> requestAiFeedback(
-      @AuthenticationPrincipal Long userId, @PathVariable Long journalId) {
+      @AuthenticationPrincipal Long userId, @PathVariable("journalId") Long journalId) {
     return ResponseEntity.ok(journalService.analyzeJournal(userId, journalId));
   }
 
   @DeleteMapping("/{journalId}/feedback")
   public ResponseEntity<MessageResponseDto> deleteAiFeedback(@AuthenticationPrincipal Long userId,
-      @PathVariable Long journalId) {
+      @PathVariable("journalId") Long journalId) {
     journalService.deleteAiFeedback(userId, journalId);
     return ResponseEntity.ok(new MessageResponseDto("기존 AI 피드백이 삭제되어 일지 수정이 가능합니다."));
   }
