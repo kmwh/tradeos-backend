@@ -1,11 +1,10 @@
 package io.github.kmwh.tradeos_backend.journal.service;
 
-import io.github.kmwh.tradeos_backend.journal.dto.JournalDetailResponseDto;
-import io.github.kmwh.tradeos_backend.journal.dto.JournalIdResponseDto;
-import io.github.kmwh.tradeos_backend.journal.dto.JournalListResponseDto;
-import io.github.kmwh.tradeos_backend.journal.dto.JournalRequestDto;
+import io.github.kmwh.tradeos_backend.journal.dto.*;
 import io.github.kmwh.tradeos_backend.journal.entity.Journal;
 import io.github.kmwh.tradeos_backend.journal.repository.JournalRepository;
+import io.github.kmwh.tradeos_backend.quant.entity.HmmHistory;
+import io.github.kmwh.tradeos_backend.quant.repository.HmmHistoryRepository;
 import io.github.kmwh.tradeos_backend.user.entity.User;
 import io.github.kmwh.tradeos_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +23,7 @@ public class JournalService {
 
   private final JournalRepository journalRepository;
   private final UserRepository userRepository;
+  private final HmmHistoryRepository hmmHistoryRepository;
 
   @Transactional
   public JournalIdResponseDto createJournal(Long userId, JournalRequestDto request) {
@@ -37,7 +37,11 @@ public class JournalService {
         .entryReason(request.entryReason()).exitReason(request.exitReason())
         .emotionTag(request.emotionTag()).build();
 
-    journal.calculatePnlAndRoi();
+    Integer hmmScore = hmmHistoryRepository
+        .findTopByTimestampLessThanEqualOrderByTimestampDesc(request.entryTime())
+        .map(HmmHistory::getTrendScore).orElse(50);
+
+    journal.calculateMetrics(hmmScore);
 
     return new JournalIdResponseDto(journalRepository.save(journal).getId());
   }
@@ -61,7 +65,11 @@ public class JournalService {
         request.volume(), request.fee(), request.entryReason(), request.exitReason(),
         request.emotionTag());
 
-    journal.calculatePnlAndRoi();
+    Integer hmmScore = hmmHistoryRepository
+        .findTopByTimestampLessThanEqualOrderByTimestampDesc(request.entryTime())
+        .map(HmmHistory::getTrendScore).orElse(50);
+
+    journal.calculateMetrics(hmmScore);
   }
 
   @Transactional

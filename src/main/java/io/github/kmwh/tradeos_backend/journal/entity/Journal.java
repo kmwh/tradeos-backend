@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import io.github.kmwh.tradeos_backend.user.entity.User;
 import io.github.kmwh.tradeos_backend.journal.entity.enums.Position;
@@ -52,7 +53,6 @@ public class Journal {
   @Column(nullable = false)
   private Double fee;
 
-  // 내부에서 계산 후 저장
   private Double realizedPnl;
   private Double roi;
 
@@ -65,6 +65,15 @@ public class Journal {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
   private EmotionTag emotionTag;
+
+  @Column(nullable = false)
+  private Long durationSeconds;
+
+  @Column(nullable = true)
+  private Integer marketHmmScore;
+
+  @Column(nullable = false, columnDefinition = "boolean default false")
+  private Boolean isReported = false;
 
   @Column(updatable = false)
   private LocalDateTime createdAt;
@@ -106,25 +115,29 @@ public class Journal {
     this.emotionTag = emotionTag;
   }
 
-  public void calculatePnlAndRoi() {
+  public void calculateMetrics(Integer hmmScore) {
     double margin = (this.entryPrice * this.volume) / this.leverage;
-
     double grossPnl = 0.0;
     if (this.position == Position.LONG) {
       grossPnl = (this.exitPrice - this.entryPrice) * this.volume;
     } else if (this.position == Position.SHORT) {
       grossPnl = (this.entryPrice - this.exitPrice) * this.volume;
     }
-
-    // 순수익
     this.realizedPnl = grossPnl - this.fee;
 
-    // roi
     if (margin > 0) {
       double rawRoi = (this.realizedPnl / margin) * 100.0;
       this.roi = Math.round(rawRoi * 100.0) / 100.0;
     } else {
       this.roi = 0.0;
     }
+
+    // 유지 시간 및 HMM 추세 점수 캐싱
+    this.durationSeconds = Duration.between(this.entryTime, this.exitTime).getSeconds();
+    this.marketHmmScore = hmmScore;
+  }
+
+  public void markAsReported() {
+    this.isReported = true;
   }
 }
