@@ -10,8 +10,8 @@ import io.github.kmwh.tradeos_backend.user.entity.User;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "tendency_reports")
-public class TendencyReport {
+@Table(name = "reports")
+public class Report {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -20,11 +20,13 @@ public class TendencyReport {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  @Column(nullable = false, length = 20)
-  private String period; // "WEEKLY", "MONTHLY"
-
   @Column(nullable = false)
-  private Double winRate;
+  private Integer batchSize;
+
+  private Double historicalWinRate;
+  private Double historicalAvgPnl;
+  private Double batchWinRate;
+  private Double batchAvgPnl;
 
   @Column(length = 50)
   private String frequentEmotion;
@@ -36,11 +38,14 @@ public class TendencyReport {
   private LocalDateTime generatedAt;
 
   @Builder
-  public TendencyReport(User user, String period, Double winRate, String frequentEmotion,
-      String aiSummary) {
+  public Report(User user, Integer batchSize, Double historicalWinRate, Double historicalAvgPnl,
+      Double batchWinRate, Double batchAvgPnl, String frequentEmotion, String aiSummary) {
     this.user = user;
-    this.period = period;
-    this.winRate = winRate;
+    this.batchSize = batchSize;
+    this.historicalWinRate = historicalWinRate;
+    this.historicalAvgPnl = historicalAvgPnl;
+    this.batchWinRate = batchWinRate;
+    this.batchAvgPnl = batchAvgPnl;
     this.frequentEmotion = frequentEmotion;
     this.aiSummary = aiSummary;
     this.generatedAt = LocalDateTime.now();
