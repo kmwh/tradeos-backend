@@ -30,6 +30,9 @@ public class User {
   @Column(nullable = false, length = 20)
   private String role;
 
+  @Column(nullable = false)
+  private Integer reportBatchSize = 10;
+
   @Column(updatable = false)
   private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -40,5 +43,9 @@ public class User {
     this.provider = provider;
     this.providerId = providerId;
     this.role = role;
+  }
+
+  public void updateReportBatchSize(Integer batchSize) {
+    this.reportBatchSize = batchSize;
   }
 }
