@@ -49,16 +49,13 @@ public class TendencyReportService {
     }
     double winRate = Math.round(((double) winCount / journals.size()) * 1000) / 10.0;
 
-    // 🌟 수정됨: Enum 타입 변환 및 Null 방어 로직 (NPE 원천 차단)
     EmotionTag frequentTag =
         journals.stream().map(Journal::getEmotionTag).filter(tag -> tag != null)
             .collect(Collectors.groupingBy(tag -> tag, Collectors.counting())).entrySet().stream()
             .max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse(null);
 
-    // Enum의 이름을 String으로 변환, 값이 없다면 "UNKNOWN" 처리
     String frequentEmotion = frequentTag != null ? frequentTag.name() : "UNKNOWN";
 
-    // 파이썬 LangGraph로 보낼 데이터 조립 (이제 null이 들어갈 위험이 없음)
     Map<String, Object> requestPayload = Map.of("period", period, "win_rate", winRate,
         "frequent_emotion", frequentEmotion, "total_trades", journals.size());
 
