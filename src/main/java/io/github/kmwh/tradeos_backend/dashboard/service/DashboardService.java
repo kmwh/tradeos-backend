@@ -6,8 +6,6 @@ import io.github.kmwh.tradeos_backend.journal.entity.Journal;
 import io.github.kmwh.tradeos_backend.journal.repository.JournalRepository;
 import io.github.kmwh.tradeos_backend.quant.dto.HmmChartDto;
 import io.github.kmwh.tradeos_backend.quant.repository.HmmHistoryRepository;
-import io.github.kmwh.tradeos_backend.user.entity.User;
-import io.github.kmwh.tradeos_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,11 +22,9 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class DashboardService {
   private final JournalRepository journalRepository;
-  private final UserRepository userRepository;
   private final HmmHistoryRepository hmmHistoryRepository;
 
   public DashboardMetricsResponseDto getDashboardMetrics(Long userId) {
-    User user = userRepository.findById(userId).orElseThrow();
     List<Journal> journals = journalRepository.findAllByUserIdOrderByEntryTimeDesc(userId);
 
     int totalTrades = journals.size();
@@ -36,10 +32,12 @@ public class DashboardService {
       return new DashboardMetricsResponseDto(0, "데이터 부족", "데이터 부족", "데이터 부족", 0.0, 0.0, 0.0);
     }
 
-    long daysActive = Duration.between(user.getCreatedAt(), LocalDateTime.now()).toDays();
-    daysActive = daysActive == 0 ? 1 : daysActive;
+    LocalDateTime earliestTrade = journals.get(journals.size() - 1).getEntryTime();
+    LocalDateTime latestTrade = journals.get(0).getEntryTime();
+    long daysActive = Duration.between(earliestTrade, latestTrade).toDays();
+    daysActive = daysActive <= 0 ? 1 : daysActive;
     double freq = (double) totalTrades / daysActive;
-    String tradeFrequency = freq >= 3.0 ? "HIGH" : freq >= 1.0 ? "MEDIUM" : "LOW";
+    String tradeFrequency = freq > 3.0 ? "HIGH" : freq < 1.0 ? "LOW" : "MEDIUM";
 
     double avgLeverage = journals.stream().mapToDouble(Journal::getLeverage).average().orElse(1.0);
     String riskTolerance = avgLeverage >= 20.0 ? "HIGH" : avgLeverage >= 5.0 ? "MEDIUM" : "LOW";
