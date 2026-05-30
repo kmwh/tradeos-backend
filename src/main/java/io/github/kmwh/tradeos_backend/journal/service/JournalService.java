@@ -3,6 +3,7 @@ package io.github.kmwh.tradeos_backend.journal.service;
 import io.github.kmwh.tradeos_backend.journal.dto.*;
 import io.github.kmwh.tradeos_backend.journal.entity.Journal;
 import io.github.kmwh.tradeos_backend.journal.repository.JournalRepository;
+import io.github.kmwh.tradeos_backend.quant.dto.HmmChartDto;
 import io.github.kmwh.tradeos_backend.quant.entity.HmmHistory;
 import io.github.kmwh.tradeos_backend.quant.repository.HmmHistoryRepository;
 import io.github.kmwh.tradeos_backend.user.entity.User;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,10 +39,7 @@ public class JournalService {
         .entryReason(request.entryReason()).exitReason(request.exitReason())
         .emotionTag(request.emotionTag()).build();
 
-    Integer hmmScore = hmmHistoryRepository
-        .findTopByTimestampLessThanEqualOrderByTimestampDesc(request.entryTime())
-        .map(HmmHistory::getTrendScore).orElse(50);
-
+    Integer hmmScore = calculateAverageHmmScore(request.entryTime(), request.exitTime());
     journal.calculateMetrics(hmmScore);
 
     return new JournalIdResponseDto(journalRepository.save(journal).getId());
@@ -53,7 +52,13 @@ public class JournalService {
 
   public JournalDetailResponseDto getJournalDetail(Long userId, Long journalId) {
     Journal journal = getJournalAndCheckOwnership(userId, journalId);
-    return new JournalDetailResponseDto(journal);
+
+    List<HmmHistory> history = hmmHistoryRepository
+        .findByTimestampBetweenOrderByTimestampAsc(journal.getEntryTime(), journal.getExitTime());
+    List<HmmChartDto> chartData =
+        history.stream().map(HmmChartDto::new).collect(Collectors.toList());
+
+    return new JournalDetailResponseDto(journal, chartData);
   }
 
   @Transactional
@@ -65,10 +70,7 @@ public class JournalService {
         request.volume(), request.fee(), request.entryReason(), request.exitReason(),
         request.emotionTag());
 
-    Integer hmmScore = hmmHistoryRepository
-        .findTopByTimestampLessThanEqualOrderByTimestampDesc(request.entryTime())
-        .map(HmmHistory::getTrendScore).orElse(50);
-
+    Integer hmmScore = calculateAverageHmmScore(request.entryTime(), request.exitTime());
     journal.calculateMetrics(hmmScore);
   }
 
@@ -76,6 +78,19 @@ public class JournalService {
   public void deleteJournal(Long userId, Long journalId) {
     Journal journal = getJournalAndCheckOwnership(userId, journalId);
     journalRepository.delete(journal);
+  }
+
+  private Integer calculateAverageHmmScore(LocalDateTime entryTime, LocalDateTime exitTime) {
+    List<HmmHistory> history =
+        hmmHistoryRepository.findByTimestampBetweenOrderByTimestampAsc(entryTime, exitTime);
+
+    if (history.isEmpty()) {
+      return hmmHistoryRepository.findTopByTimestampLessThanEqualOrderByTimestampDesc(entryTime)
+          .map(HmmHistory::getTrendScore).orElse(50);
+    }
+
+    double avg = history.stream().mapToInt(HmmHistory::getTrendScore).average().orElse(50.0);
+    return (int) Math.round(avg);
   }
 
   private Journal getJournalAndCheckOwnership(Long userId, Long journalId) {
