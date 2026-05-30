@@ -33,9 +33,11 @@ public class JournalService {
     Journal journal = Journal.builder().user(user).ticker(request.ticker())
         .entryTime(request.entryTime()).exitTime(request.exitTime()).position(request.position())
         .entryPrice(request.entryPrice()).exitPrice(request.exitPrice())
-        .leverage(request.leverage()).realizedPnl(request.realizedPnl()).roi(request.roi())
+        .leverage(request.leverage()).volume(request.volume()).fee(request.fee())
         .entryReason(request.entryReason()).exitReason(request.exitReason())
         .emotionTag(request.emotionTag()).build();
+
+    journal.calculatePnlAndRoi();
 
     return new JournalIdResponseDto(journalRepository.save(journal).getId());
   }
@@ -56,8 +58,10 @@ public class JournalService {
 
     journal.updateJournal(request.ticker(), request.entryTime(), request.exitTime(),
         request.position(), request.entryPrice(), request.exitPrice(), request.leverage(),
-        request.realizedPnl(), request.roi(), request.entryReason(), request.exitReason(),
+        request.volume(), request.fee(), request.entryReason(), request.exitReason(),
         request.emotionTag());
+
+    journal.calculatePnlAndRoi();
   }
 
   @Transactional

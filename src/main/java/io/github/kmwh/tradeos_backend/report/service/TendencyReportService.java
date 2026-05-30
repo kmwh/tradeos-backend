@@ -1,6 +1,7 @@
 package io.github.kmwh.tradeos_backend.report.service;
 
 import io.github.kmwh.tradeos_backend.journal.entity.Journal;
+import io.github.kmwh.tradeos_backend.journal.entity.enums.EmotionTag;
 import io.github.kmwh.tradeos_backend.journal.repository.JournalRepository;
 import io.github.kmwh.tradeos_backend.report.dto.TendencyReportResponseDto;
 import io.github.kmwh.tradeos_backend.report.entity.TendencyReport;
@@ -48,23 +49,25 @@ public class TendencyReportService {
     }
     double winRate = Math.round(((double) winCount / journals.size()) * 1000) / 10.0;
 
-    String frequentEmotion =
-        journals.stream().map(Journal::getEmotionTag).filter(tag -> tag != null && !tag.isBlank())
+    // 🌟 수정됨: Enum 타입 변환 및 Null 방어 로직 (NPE 원천 차단)
+    EmotionTag frequentTag =
+        journals.stream().map(Journal::getEmotionTag).filter(tag -> tag != null)
             .collect(Collectors.groupingBy(tag -> tag, Collectors.counting())).entrySet().stream()
-            .max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse("안정");
+            .max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse(null);
 
-    // 파이썬 LangGraph로 보낼 데이터 조립
+    // Enum의 이름을 String으로 변환, 값이 없다면 "UNKNOWN" 처리
+    String frequentEmotion = frequentTag != null ? frequentTag.name() : "UNKNOWN";
+
+    // 파이썬 LangGraph로 보낼 데이터 조립 (이제 null이 들어갈 위험이 없음)
     Map<String, Object> requestPayload = Map.of("period", period, "win_rate", winRate,
         "frequent_emotion", frequentEmotion, "total_trades", journals.size());
 
     try {
-      // FastAPI 호출하여 종합 평가 받아오기
       Map<String, String> response = restClient.post().uri(FASTAPI_TENDENCY_URL)
           .body(requestPayload).retrieve().body(Map.class);
 
       String aiSummary = response.get("summary_text");
 
-      // DB에 리포트 저장
       TendencyReport report = TendencyReport.builder().user(user).period(period.toUpperCase())
           .winRate(winRate).frequentEmotion(frequentEmotion).aiSummary(aiSummary).build();
 
