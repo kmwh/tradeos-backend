@@ -85,6 +85,7 @@ public class ReportService {
       data.put("exit_reason", j.getExitReason() != null ? j.getExitReason() : "기록 없음");
       data.put("emotion", j.getEmotionTag() != null ? j.getEmotionTag().name() : "UNKNOWN");
       data.put("pnl", j.getRealizedPnl() != null ? j.getRealizedPnl() : 0.0);
+      data.put("hmm_score", j.getMarketHmmScore() != null ? j.getRealizedPnl() : 0.0);
       return data;
     }).collect(Collectors.toList());
 
