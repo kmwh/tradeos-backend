@@ -36,7 +36,6 @@ public class ReportService {
 
   private static final String FASTAPI_TENDENCY_URL = "http://localhost:8000/api/v1/ai/tendency";
 
-  // 매매 일지가 reportBatchSize인 경우 자동 발행
   public ReportResponseDto generatePerformanceReport(Long userId) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
@@ -50,19 +49,20 @@ public class ReportService {
           "리포트를 발행하기 위한 일지가 부족합니다. (현재: " + unreported.size() + " / 필요: " + batchSize + ")");
     }
 
-    // 이번에 평가할 데이터들 추출
+    // 이번에 평가할 데이터 추출
     List<Journal> targetBatch = unreported.subList(0, batchSize);
 
-    // 과거 누적 성과 계산
-    List<Journal> historical = journalRepository.findByUserIdAndIsReportedTrue(userId);
+    // 과거 성과 계산
+    long histTotal = journalRepository.countHistoricalTotal(userId);
     double histWinRate = 0.0;
     double histAvgPnl = 0.0;
-    if (!historical.isEmpty()) {
-      long histWins = historical.stream().filter(j -> j.getRealizedPnl() > 0).count();
-      histWinRate = Math.round(((double) histWins / historical.size()) * 1000) / 10.0;
-      histAvgPnl = Math.round(
-          historical.stream().mapToDouble(Journal::getRealizedPnl).average().orElse(0.0) * 100)
-          / 100.0;
+
+    if (histTotal > 0) {
+      long histWins = journalRepository.countHistoricalWins(userId);
+      histWinRate = Math.round(((double) histWins / histTotal) * 1000) / 10.0;
+
+      Double avgPnl = journalRepository.getHistoricalAvgPnl(userId);
+      histAvgPnl = avgPnl != null ? Math.round(avgPnl * 100) / 100.0 : 0.0;
     }
 
     // 이번 주기 성과 계산
@@ -72,13 +72,14 @@ public class ReportService {
         targetBatch.stream().mapToDouble(Journal::getRealizedPnl).average().orElse(0.0) * 100)
         / 100.0;
 
-    // 자주 느낀 감정
+    // 자주 느낀 감정 추출
     EmotionTag frequentTag =
         targetBatch.stream().map(Journal::getEmotionTag).filter(tag -> tag != null)
             .collect(Collectors.groupingBy(tag -> tag, Collectors.counting())).entrySet().stream()
             .max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse(null);
     String frequentEmotion = frequentTag != null ? frequentTag.name() : "UNKNOWN";
 
+    // 파이썬 평가를 위한 리스트 매핑
     List<Map<String, Object>> journalDataList = targetBatch.stream().map(j -> {
       Map<String, Object> data = new HashMap<>();
       data.put("ticker", j.getTicker() != null ? j.getTicker() : "UNKNOWN");
@@ -113,7 +114,6 @@ public class ReportService {
 
       reportRepository.save(report);
 
-      // 대상 일지들 리포트 발행 완료 상태로 변경
       targetBatch.forEach(Journal::markAsReported);
       journalRepository.saveAll(targetBatch);
 

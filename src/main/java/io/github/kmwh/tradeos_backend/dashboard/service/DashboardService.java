@@ -2,7 +2,6 @@ package io.github.kmwh.tradeos_backend.dashboard.service;
 
 import io.github.kmwh.tradeos_backend.dashboard.dto.DashboardMetricsResponseDto;
 import io.github.kmwh.tradeos_backend.dashboard.dto.PnlChartResponseDto;
-import io.github.kmwh.tradeos_backend.journal.entity.Journal;
 import io.github.kmwh.tradeos_backend.journal.repository.JournalRepository;
 import io.github.kmwh.tradeos_backend.quant.dto.HmmChartDto;
 import io.github.kmwh.tradeos_backend.quant.repository.HmmHistoryRepository;
@@ -25,52 +24,55 @@ public class DashboardService {
   private final HmmHistoryRepository hmmHistoryRepository;
 
   public DashboardMetricsResponseDto getDashboardMetrics(Long userId) {
-    List<Journal> journals = journalRepository.findAllByUserIdOrderByEntryTimeDesc(userId);
-
-    int totalTrades = journals.size();
+    long totalTrades = journalRepository.countByUserId(userId);
     if (totalTrades == 0) {
       return new DashboardMetricsResponseDto(0, null, null, null, null, null, null);
     }
 
-    LocalDateTime earliestTrade = journals.get(journals.size() - 1).getEntryTime();
-    LocalDateTime latestTrade = journals.get(0).getEntryTime();
+    // 거래 빈도
+    LocalDateTime earliestTrade = journalRepository.getEarliestTradeTime(userId);
+    LocalDateTime latestTrade = journalRepository.getLatestTradeTime(userId);
     long daysActive = Duration.between(earliestTrade, latestTrade).toDays();
     daysActive = daysActive <= 0 ? 1 : daysActive;
     double freq = (double) totalTrades / daysActive;
     String tradeFrequency = freq > 3.0 ? "HIGH" : freq < 1.0 ? "LOW" : "MEDIUM";
 
-    double avgLeverage = journals.stream().mapToDouble(Journal::getLeverage).average().orElse(1.0);
+    // 평균 레버리지
+    Double avgLev = journalRepository.getAverageLeverage(userId);
+    double avgLeverage = avgLev != null ? avgLev : 1.0;
     String riskTolerance = avgLeverage >= 20.0 ? "HIGH" : avgLeverage >= 5.0 ? "MEDIUM" : "LOW";
 
-    double avgDuration =
-        journals.stream().mapToDouble(Journal::getDurationSeconds).average().orElse(0.0);
+    // 거래 유지 시간 성향
+    Double avgDur = journalRepository.getAverageDuration(userId);
+    double avgDuration = avgDur != null ? avgDur : 0.0;
     String tradeDuration = avgDuration >= 86400 ? "LONG-TERM" : "SHORT-TERM";
 
-    long winCount = journals.stream().filter(j -> j.getRealizedPnl() > 0).count();
-    double totalWinRate = Math.round(((double) winCount / totalTrades) * 1000) / 10.0;
+    // 총 승률
+    long totalWins = journalRepository.countTotalWins(userId);
+    double totalWinRate = Math.round(((double) totalWins / totalTrades) * 1000) / 10.0;
 
-    List<Journal> trendJournals = journals.stream()
-        .filter(j -> j.getMarketHmmScore() != null && j.getMarketHmmScore() > 60).toList();
+    // 추세장 승률
+    long trendTrades = journalRepository.countTrendTrades(userId);
     Double trendWinRate = null;
-    if (!trendJournals.isEmpty()) {
-      long trendWins = trendJournals.stream().filter(j -> j.getRealizedPnl() > 0).count();
-      trendWinRate = Math.round(((double) trendWins / trendJournals.size()) * 1000) / 10.0;
+    if (trendTrades > 0) {
+      long trendWins = journalRepository.countTrendWins(userId);
+      trendWinRate = Math.round(((double) trendWins / trendTrades) * 1000) / 10.0;
     }
 
-    List<Journal> nonTrendJournals = journals.stream()
-        .filter(j -> j.getMarketHmmScore() != null && j.getMarketHmmScore() <= 60).toList();
+    // 비추세장 승률
+    long nonTrendTrades = journalRepository.countNonTrendTrades(userId);
     Double nonTrendWinRate = null;
-    if (!nonTrendJournals.isEmpty()) {
-      long nonTrendWins = nonTrendJournals.stream().filter(j -> j.getRealizedPnl() > 0).count();
-      nonTrendWinRate = Math.round(((double) nonTrendWins / nonTrendJournals.size()) * 1000) / 10.0;
+    if (nonTrendTrades > 0) {
+      long nonTrendWins = journalRepository.countNonTrendWins(userId);
+      nonTrendWinRate = Math.round(((double) nonTrendWins / nonTrendTrades) * 1000) / 10.0;
     }
 
-    return new DashboardMetricsResponseDto(totalTrades, tradeFrequency, riskTolerance,
+    return new DashboardMetricsResponseDto((int) totalTrades, tradeFrequency, riskTolerance,
         tradeDuration, totalWinRate, trendWinRate, nonTrendWinRate);
   }
 
   public List<PnlChartResponseDto> getPnlChartData(Long userId) {
-    return journalRepository.findAllByUserIdOrderByEntryTimeDesc(userId).stream().limit(50)
+    return journalRepository.findTop50ByUserIdOrderByEntryTimeDesc(userId).stream()
         .map(PnlChartResponseDto::new).collect(Collectors.toList());
   }
 
