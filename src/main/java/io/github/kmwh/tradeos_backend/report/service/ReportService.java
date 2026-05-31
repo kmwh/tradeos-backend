@@ -37,7 +37,7 @@ public class ReportService {
   private final UserRepository userRepository;
   private final RestClient restClient;
 
-  @Value("${external.ai.tendency-url}")
+  @Value("${external.ai.report-url}")
   private String fastApiReportUrl;
 
   @Async
