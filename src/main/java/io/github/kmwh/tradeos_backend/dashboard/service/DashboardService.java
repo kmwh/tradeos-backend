@@ -29,7 +29,7 @@ public class DashboardService {
 
     int totalTrades = journals.size();
     if (totalTrades == 0) {
-      return new DashboardMetricsResponseDto(0, "데이터 부족", "데이터 부족", "데이터 부족", 0.0, null, null);
+      return new DashboardMetricsResponseDto(0, null, null, null, null, null, null);
     }
 
     LocalDateTime earliestTrade = journals.get(journals.size() - 1).getEntryTime();
