@@ -10,6 +10,7 @@ import io.github.kmwh.tradeos_backend.user.entity.User;
 import io.github.kmwh.tradeos_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +37,8 @@ public class ReportService {
   private final UserRepository userRepository;
   private final RestClient restClient;
 
-  private static final String FASTAPI_TENDENCY_URL = "http://localhost:8000/api/v1/ai/tendency";
+  @Value("${external.ai.tendency-url}")
+  private String fastApiReportUrl;
 
   @Async
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -115,7 +117,7 @@ public class ReportService {
 
     try {
       Map<String, Object> response =
-          restClient.post().uri(FASTAPI_TENDENCY_URL).contentType(MediaType.APPLICATION_JSON)
+          restClient.post().uri(fastApiReportUrl).contentType(MediaType.APPLICATION_JSON)
               .accept(MediaType.APPLICATION_JSON).body(requestPayload).retrieve()
               .body(new ParameterizedTypeReference<Map<String, Object>>() {});
 

@@ -32,3 +32,8 @@ jwt:
   secret: ${JWT_SECRET}
   access-expiration: 3600000 # 1시간
   refresh-expiration: 604800000 # 7일
+
+external:
+  ai:
+    hmm-url: http://localhost:8000/api/v1/hmm/predict
+    report-url: http://localhost:8000/api/v1/ai/report

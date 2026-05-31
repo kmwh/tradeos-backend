@@ -2,6 +2,7 @@ package io.github.kmwh.tradeos_backend.quant.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
@@ -17,14 +18,14 @@ public class HmmPipelineService {
   private final RestClient restClient;
   private final HmmHistoryRepository hmmHistoryRepository;
 
-  private static final String FASTAPI_URL =
-      "http://localhost:8000/api/v1/hmm/predict?symbol=BTC/USDT";
+  @Value("${external.ai.hmm-url}")
+  private String fastApiHmmUrl;
 
   @Transactional
   public void fetchAndSaveHmmScore() {
     try {
       HmmPredictResponseDto response =
-          restClient.get().uri(FASTAPI_URL).retrieve().body(HmmPredictResponseDto.class);
+          restClient.get().uri(fastApiHmmUrl).retrieve().body(HmmPredictResponseDto.class);
 
       if (response != null) {
         HmmHistory history = HmmHistory.builder().timestamp(response.timestamp())
