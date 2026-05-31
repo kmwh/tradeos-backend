@@ -12,6 +12,8 @@ import io.github.kmwh.tradeos_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -54,20 +56,17 @@ public class JournalService {
     journalRepository.save(journal);
 
     // 자동 리포트 발행
-    int totalJournals = journalRepository.findAllByUserIdOrderByEntryTimeDesc(userId).size();
-    int batchSize = user.getReportBatchSize() != null ? user.getReportBatchSize() : 10;
+    int unreportedCount = journalRepository.countByUserIdAndIsReportedFalse(userId);
+    int batchSize = user.getReportBatchSize();
 
-    if (totalJournals > 0 && totalJournals % batchSize == 0) {
-      log.info("자동 리포트 발행 조건 충족 (총 매매: {} / 기준: {}). 비동기 발행을 시작합니다.", totalJournals, batchSize);
-
-      // 락이나 롤백 방지
+    if (unreportedCount >= batchSize) {
+      // 트랜잭션 꼬임 방지
       TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
         @Override
         public void afterCommit() {
           CompletableFuture.runAsync(() -> {
             try {
               reportService.generatePerformanceReport(userId);
-              log.info("자동 리포트 발행 성공 (UserId: {})", userId);
             } catch (Exception e) {
               log.error("자동 리포트 발행 중 오류 발생 (UserId: {})", userId, e);
             }
@@ -79,9 +78,9 @@ public class JournalService {
     return new JournalIdResponseDto(journal.getId());
   }
 
-  public List<JournalListResponseDto> getJournals(Long userId) {
-    return journalRepository.findAllByUserIdOrderByEntryTimeDesc(userId).stream()
-        .map(JournalListResponseDto::new).collect(Collectors.toList());
+  public Page<JournalListResponseDto> getJournals(Long userId, Pageable pageable) {
+    return journalRepository.findAllByUserIdOrderByEntryTimeDesc(userId, pageable)
+        .map(JournalListResponseDto::new);
   }
 
   public JournalDetailResponseDto getJournalDetail(Long userId, Long journalId) {

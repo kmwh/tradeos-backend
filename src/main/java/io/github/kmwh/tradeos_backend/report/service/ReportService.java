@@ -11,6 +11,8 @@ import io.github.kmwh.tradeos_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ public class ReportService {
 
   private static final String FASTAPI_TENDENCY_URL = "http://localhost:8000/api/v1/ai/tendency";
 
+  // 매매 일지가 reportBatchSize인 경우 자동 발행
   public ReportResponseDto generatePerformanceReport(Long userId) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
@@ -124,8 +127,8 @@ public class ReportService {
   }
 
   @Transactional(readOnly = true)
-  public List<ReportResponseDto> getReportHistory(Long userId) {
-    return tendencyReportRepository.findAllByUserIdOrderByGeneratedAtDesc(userId).stream()
-        .map(ReportResponseDto::new).collect(Collectors.toList());
+  public Page<ReportResponseDto> getReportHistory(Long userId, Pageable pageable) {
+    return tendencyReportRepository.findAllByUserIdOrderByGeneratedAtDesc(userId, pageable)
+        .map(ReportResponseDto::new);
   }
 }

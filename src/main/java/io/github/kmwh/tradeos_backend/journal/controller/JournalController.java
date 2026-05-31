@@ -7,11 +7,11 @@ import io.github.kmwh.tradeos_backend.journal.dto.JournalListResponseDto;
 import io.github.kmwh.tradeos_backend.journal.dto.JournalRequestDto;
 import io.github.kmwh.tradeos_backend.journal.service.JournalService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/journals")
@@ -27,9 +27,9 @@ public class JournalController {
   }
 
   @GetMapping
-  public ResponseEntity<List<JournalListResponseDto>> getJournals(
-      @AuthenticationPrincipal Long userId) {
-    return ResponseEntity.ok(journalService.getJournals(userId));
+  public ResponseEntity<Page<JournalListResponseDto>> getJournals(
+      @AuthenticationPrincipal Long userId, Pageable pageable) {
+    return ResponseEntity.ok(journalService.getJournals(userId, pageable));
   }
 
   @GetMapping("/{journalId}")
