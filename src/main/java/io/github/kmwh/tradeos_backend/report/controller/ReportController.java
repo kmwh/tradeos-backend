@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ReportController {
 
-  private final ReportService tendencyReportService;
+  private final ReportService reportService;
 
   // @PostMapping
   // public ResponseEntity<ReportResponseDto> generateReport(@AuthenticationPrincipal Long userId) {
@@ -23,12 +23,12 @@ public class ReportController {
 
   @GetMapping("/latest")
   public ResponseEntity<ReportResponseDto> getLatestReport(@AuthenticationPrincipal Long userId) {
-    return ResponseEntity.ok(tendencyReportService.getLatestReport(userId));
+    return ResponseEntity.ok(reportService.getLatestReport(userId));
   }
 
   @GetMapping("/history")
   public ResponseEntity<Page<ReportResponseDto>> getReportHistory(
       @AuthenticationPrincipal Long userId, Pageable pageable) {
-    return ResponseEntity.ok(tendencyReportService.getReportHistory(userId, pageable));
+    return ResponseEntity.ok(reportService.getReportHistory(userId, pageable));
   }
 }

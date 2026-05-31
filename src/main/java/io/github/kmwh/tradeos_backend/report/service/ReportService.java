@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = false)
 public class ReportService {
 
-  private final ReportRepository tendencyReportRepository;
+  private final ReportRepository reportRepository;
   private final JournalRepository journalRepository;
   private final UserRepository userRepository;
   private final RestClient restClient;
@@ -105,7 +105,7 @@ public class ReportService {
           .historicalWinRate(histWinRate).historicalAvgPnl(histAvgPnl).batchWinRate(batchWinRate)
           .batchAvgPnl(batchAvgPnl).frequentEmotion(frequentEmotion).aiSummary(aiSummary).build();
 
-      tendencyReportRepository.save(report);
+      reportRepository.save(report);
 
       // 대상 일지들 리포트 발행 완료 상태로 변경
       targetBatch.forEach(Journal::markAsReported);
@@ -121,14 +121,14 @@ public class ReportService {
 
   @Transactional(readOnly = true)
   public ReportResponseDto getLatestReport(Long userId) {
-    Report report = tendencyReportRepository.findTopByUserIdOrderByGeneratedAtDesc(userId)
+    Report report = reportRepository.findTopByUserIdOrderByGeneratedAtDesc(userId)
         .orElseThrow(() -> new IllegalArgumentException("발행된 리포트가 없습니다."));
     return new ReportResponseDto(report);
   }
 
   @Transactional(readOnly = true)
   public Page<ReportResponseDto> getReportHistory(Long userId, Pageable pageable) {
-    return tendencyReportRepository.findAllByUserIdOrderByGeneratedAtDesc(userId, pageable)
+    return reportRepository.findAllByUserIdOrderByGeneratedAtDesc(userId, pageable)
         .map(ReportResponseDto::new);
   }
 }
