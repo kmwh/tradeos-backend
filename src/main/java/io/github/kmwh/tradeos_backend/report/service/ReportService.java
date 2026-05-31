@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -78,14 +79,18 @@ public class ReportService {
             .max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse(null);
     String frequentEmotion = frequentTag != null ? frequentTag.name() : "UNKNOWN";
 
-    // 파이썬 평가를 위한 리스트 매핑
     List<Map<String, Object>> journalDataList = targetBatch.stream().map(j -> {
-      Map<String, Object> data = new java.util.HashMap<>();
+      Map<String, Object> data = new HashMap<>();
+      data.put("ticker", j.getTicker() != null ? j.getTicker() : "UNKNOWN");
+      data.put("position", j.getPosition() != null ? j.getPosition().name() : "UNKNOWN");
+      data.put("leverage", j.getLeverage() != null ? j.getLeverage() : 1.0);
       data.put("entry_reason", j.getEntryReason() != null ? j.getEntryReason() : "기록 없음");
       data.put("exit_reason", j.getExitReason() != null ? j.getExitReason() : "기록 없음");
       data.put("emotion", j.getEmotionTag() != null ? j.getEmotionTag().name() : "UNKNOWN");
       data.put("pnl", j.getRealizedPnl() != null ? j.getRealizedPnl() : 0.0);
-      data.put("hmm_score", j.getMarketHmmScore() != null ? j.getRealizedPnl() : 0.0);
+      data.put("roi", j.getRoi() != null ? j.getRoi() : 0.0);
+      data.put("duration_seconds", j.getDurationSeconds() != null ? j.getDurationSeconds() : 0);
+      data.put("hmm_score", j.getMarketHmmScore() != null ? j.getMarketHmmScore() : 50);
       return data;
     }).collect(Collectors.toList());
 
