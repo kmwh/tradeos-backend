@@ -21,7 +21,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -52,25 +51,18 @@ public class JournalService {
     Integer hmmScore = calculateAverageHmmScore(request.entryTime(), request.exitTime());
     journal.calculateMetrics(hmmScore);
 
-    // 일지 저장
+    // 일지 저장 (이 시점에는 영속성 컨텍스트에만 반영됨)
     journalRepository.save(journal);
 
-    // 자동 리포트 발행
+    // 자동 리포트 발행 체크
     int unreportedCount = journalRepository.countByUserIdAndIsReportedFalse(userId);
     int batchSize = user.getReportBatchSize();
 
     if (unreportedCount >= batchSize) {
-      // 트랜잭션 꼬임 방지
       TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
         @Override
         public void afterCommit() {
-          CompletableFuture.runAsync(() -> {
-            try {
-              reportService.generatePerformanceReport(userId);
-            } catch (Exception e) {
-              log.error("자동 리포트 발행 중 오류 발생 (UserId: {})", userId, e);
-            }
-          });
+          reportService.generatePerformanceReportAsync(userId);
         }
       });
     }

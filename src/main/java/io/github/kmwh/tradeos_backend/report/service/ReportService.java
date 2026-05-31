@@ -14,7 +14,9 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
@@ -35,6 +37,18 @@ public class ReportService {
   private final RestClient restClient;
 
   private static final String FASTAPI_TENDENCY_URL = "http://localhost:8000/api/v1/ai/tendency";
+
+  @Async
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void generatePerformanceReportAsync(Long userId) {
+    try {
+      log.info("비동기 AI 리포트 자동 발행 시작 (UserId: {})", userId);
+      generatePerformanceReport(userId);
+      log.info("비동기 AI 리포트 자동 발행 성공 (UserId: {})", userId);
+    } catch (Exception e) {
+      log.error("비동기 AI 리포트 자동 발행 중 오류 발생 (UserId: {})", userId, e);
+    }
+  }
 
   public ReportResponseDto generatePerformanceReport(Long userId) {
     User user = userRepository.findById(userId)
