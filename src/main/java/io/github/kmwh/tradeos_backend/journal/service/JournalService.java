@@ -6,15 +6,20 @@ import io.github.kmwh.tradeos_backend.journal.repository.JournalRepository;
 import io.github.kmwh.tradeos_backend.quant.dto.HmmChartDto;
 import io.github.kmwh.tradeos_backend.quant.entity.HmmHistory;
 import io.github.kmwh.tradeos_backend.quant.repository.HmmHistoryRepository;
+import io.github.kmwh.tradeos_backend.report.service.ReportService;
 import io.github.kmwh.tradeos_backend.user.entity.User;
 import io.github.kmwh.tradeos_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,6 +31,9 @@ public class JournalService {
   private final JournalRepository journalRepository;
   private final UserRepository userRepository;
   private final HmmHistoryRepository hmmHistoryRepository;
+
+  @Lazy
+  private final ReportService reportService;
 
   @Transactional
   public JournalIdResponseDto createJournal(Long userId, JournalRequestDto request) {
@@ -42,7 +50,33 @@ public class JournalService {
     Integer hmmScore = calculateAverageHmmScore(request.entryTime(), request.exitTime());
     journal.calculateMetrics(hmmScore);
 
-    return new JournalIdResponseDto(journalRepository.save(journal).getId());
+    // 일지 저장
+    journalRepository.save(journal);
+
+    // 자동 리포트 발행
+    int totalJournals = journalRepository.findAllByUserIdOrderByEntryTimeDesc(userId).size();
+    int batchSize = user.getReportBatchSize() != null ? user.getReportBatchSize() : 10;
+
+    if (totalJournals > 0 && totalJournals % batchSize == 0) {
+      log.info("자동 리포트 발행 조건 충족 (총 매매: {} / 기준: {}). 비동기 발행을 시작합니다.", totalJournals, batchSize);
+
+      // 락이나 롤백 방지
+      TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+        @Override
+        public void afterCommit() {
+          CompletableFuture.runAsync(() -> {
+            try {
+              reportService.generatePerformanceReport(userId);
+              log.info("자동 리포트 발행 성공 (UserId: {})", userId);
+            } catch (Exception e) {
+              log.error("자동 리포트 발행 중 오류 발생 (UserId: {})", userId, e);
+            }
+          });
+        }
+      });
+    }
+
+    return new JournalIdResponseDto(journal.getId());
   }
 
   public List<JournalListResponseDto> getJournals(Long userId) {
