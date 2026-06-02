@@ -29,9 +29,6 @@ public class UserService {
         .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
     if (request.reportBatchSize() != null) {
-      if (request.reportBatchSize() < 5) {
-        throw new IllegalArgumentException("리포트 발행 최소 기준은 5개입니다.");
-      }
       user.updateReportBatchSize(request.reportBatchSize());
     }
 

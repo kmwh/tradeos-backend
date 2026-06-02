@@ -46,6 +46,9 @@ public class User {
   }
 
   public void updateReportBatchSize(Integer batchSize) {
+    if (batchSize < 2) {
+      throw new IllegalArgumentException("리포트 발행 최소 기준은 2개입니다.");
+    }
     this.reportBatchSize = batchSize;
   }
 }
