@@ -43,4 +43,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
     return null;
   }
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    String path = request.getRequestURI();
+    // Swagger 및 API 명세서 경로는 JWT 검사를 아예 수행하지 않음
+    return path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs")
+        || path.startsWith("/swagger-resources");
+  }
 }
