@@ -43,5 +43,5 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/tradeos-server
-            sudo docker-compose pull tradeos-backend
-            sudo docker-compose up -d tradeos-backend
+            sudo docker compose pull tradeos-backend
+            sudo docker compose up -d tradeos-backend
