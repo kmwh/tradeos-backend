@@ -35,7 +35,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     response.addCookie(refreshCookie);
 
     // 프론트엔드 주소로 리다이렉트
-    String targetUrl = "http://localhost:3000/oauth2/redirect?token=" + accessToken;
+    // String targetUrl = "http://localhost:3000/oauth2/redirect?token=" + accessToken;
+    String targetUrl =
+        "https://tradeos-frontend-sigma.vercel.app//oauth2/redirect?token=" + accessToken;
     getRedirectStrategy().sendRedirect(request, response, targetUrl);
   }
 }
