@@ -6,6 +6,7 @@ import io.github.kmwh.tradeos_backend.journal.dto.JournalIdResponseDto;
 import io.github.kmwh.tradeos_backend.journal.dto.JournalListResponseDto;
 import io.github.kmwh.tradeos_backend.journal.dto.JournalRequestDto;
 import io.github.kmwh.tradeos_backend.journal.service.JournalService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +23,7 @@ public class JournalController {
 
   @PostMapping
   public ResponseEntity<JournalIdResponseDto> createJournal(@AuthenticationPrincipal Long userId,
-      @RequestBody JournalRequestDto requestDto) {
+      @Valid @RequestBody JournalRequestDto requestDto) {
     return ResponseEntity.ok(journalService.createJournal(userId, requestDto));
   }
 

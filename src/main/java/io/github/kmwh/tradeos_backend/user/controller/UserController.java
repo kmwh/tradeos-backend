@@ -3,6 +3,7 @@ package io.github.kmwh.tradeos_backend.user.controller;
 import io.github.kmwh.tradeos_backend.user.dto.UserInfoResponseDto;
 import io.github.kmwh.tradeos_backend.user.dto.UserUpdateSettingsRequestDto;
 import io.github.kmwh.tradeos_backend.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,7 +23,7 @@ public class UserController {
 
   @PutMapping("/settings")
   public ResponseEntity<UserInfoResponseDto> updateSettings(@AuthenticationPrincipal Long userId,
-      @RequestBody UserUpdateSettingsRequestDto request) {
+      @Valid @RequestBody UserUpdateSettingsRequestDto request) {
     return ResponseEntity.ok(userService.updateSettings(userId, request));
   }
 }
