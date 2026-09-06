@@ -13,3 +13,7 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+
+app:
+  frontend:
+    base-url: ${FRONTEND_BASE_URL}

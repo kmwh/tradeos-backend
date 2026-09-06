@@ -35,5 +35,9 @@ jwt:
 
 external:
   ai:
-    hmm-url: ${AI_SERVER_HOST:http://localhost:8000}/api/v1/hmm/predict
-    report-url: ${AI_SERVER_HOST:http://localhost:8000}/api/v1/ai/report
+    hmm-url: ${AI_SERVER_HOST}/api/v1/hmm/predict
+    report-url: ${AI_SERVER_HOST}/api/v1/ai/report
+
+app:
+  frontend:
+    base-url: http://localhost:3000
